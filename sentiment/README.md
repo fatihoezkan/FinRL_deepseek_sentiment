@@ -19,6 +19,11 @@ There are 4 python scripts in this directory. The purpose of each script is as f
  - Appends each news data with its risk value into `news_with_risk_score.csv` for tracebility to trace which news has what risk score
  - Saves datetime, source, specific source, and risk score columns temporarily to `temp/date_risk.csv` for the next risk score aggregation step
 
+ ### `risk_score_validation.py`
+- Loads another large language model and sets it up for validation purpose.
+- Validates if the generated risk scores correctly map the true risk level of the corresponding news article by analysing the header, content and the generated risk scores of each Nvidia stock reated articles, using the respective LLM.
+- Further initiates another generation for the risk score of an article, if this risk score is found to be invalid, with a retry of 2.
+
 ### `risk_score_aggregation.py`
  - Loads data from `temp/date_risk.csv`
  - Rounds the datetime to the nearest hourly bin (for e.g. 8:30, 9:30 ..)
@@ -32,7 +37,12 @@ There are 4 python scripts in this directory. The purpose of each script is as f
 ---
 
 ## 📦 Features
-
+### ✅ **Post-generation risk score validation**
+- To be able to achieve more accuracy for the FinRL agent, the data used to train this agent needs to be correct and valid. Since an LLM is used to generate some of this data (the risk scores), validation is required to ensure high level of data quality.
+- This is done through another LLM which present a variety in pre-trained knowledge.
+### ➤ 🔁 **Regeneration**
+- Knowing that LLMs fail, the risk scores generated can sometimes be invalid. Thus, a process of re-generation is initiated for these risk scores.
+- This process is done through the previously setup generation LLM and follows the previous generation structure. 
 ### ➤ ⚖️ **KMeans Clustering for specific source weights**  
  - In order to improve the performance of the FinRL agent when receiving news sentiment in its trading environment, it is important to note that news from certain sources could have better influence than others. By giving these important sources a higher weight when calculating the average risk score, it gives more emphasis to the news from these important sources.
  - Instead of using random values for the source weights, KMeans Clustering is applied on the specific sources to obtain the optimal weight for each specific source.
