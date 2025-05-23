@@ -1,14 +1,21 @@
 import torch
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 # Paths
-RAW_DATA_CSV = '../scrape/news.csv'
-TEMP_PROCESSED_JSON = 'temp/processed_data.json'
+RAW_DATA_CSV = 'scrape/news.csv'
+TEMP_PROCESSED_JSON = 'sentiment/temp/processed_data.json'
 NEWS_WITH_SCORE_CSV = 'news_with_risk_score.csv'
-TEMP_DATE_RISK_CSV = 'temp/date_risk.csv'
+TEMP_DATE_RISK_CSV = 'sentiment/temp/date_risk.csv'
 AGGREGATED_WEIGHTS_CSV = 'aggregated_risk_scores.csv'
+MODEL_CACHE_DIR = 'sentiment/cache_models'
 
 # Model
 G_LLM = "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
+VALIDATION_LLM = "meta-llama/Llama-3.2-3B-Instruct"
 
 # Specific source weights
 SOURCE_WEIGHTS = {
@@ -37,4 +44,4 @@ SOURCE_WEIGHTS = {
                 }
 
 # Device
-device = "cuda" if torch.cuda.is_available() else "cpu"
+device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
