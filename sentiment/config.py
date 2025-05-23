@@ -8,9 +8,9 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 # Paths
 RAW_DATA_CSV = 'scrape/news.csv'
 TEMP_PROCESSED_JSON = 'sentiment/temp/processed_data.json'
-NEWS_WITH_SCORE_CSV = 'news_with_risk_score.csv'
+NEWS_WITH_SCORE_CSV = 'sentiment/news_with_risk_score.csv'
 TEMP_DATE_RISK_CSV = 'sentiment/temp/date_risk.csv'
-AGGREGATED_WEIGHTS_CSV = 'aggregated_risk_scores.csv'
+AGGREGATED_WEIGHTS_CSV = 'sentiment/aggregated_risk_scores.csv'
 MODEL_CACHE_DIR = 'sentiment/cache_models'
 
 # Model
