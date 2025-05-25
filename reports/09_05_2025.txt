@@ -1,0 +1,4 @@
+These are my contributions to the project in the last week:
+- Twitter scrapper implemented and failed (due to scrapping restrictions)
+- Integration in the whole project pipeline, with a main focus on the agentic side
+- The next steps were for me to start training other agents like PPO & TD3 and compare their results, but the task was then given to Fatih
