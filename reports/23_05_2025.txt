@@ -1,0 +1,7 @@
+These are my contributions to the project in the last week:
+- Validation pipeline sucessfully setup and running
+- Altered risk_generation pipeline to fit the new implementation
+- Altered sentiment/main.py to fit the new implementation
+- Altered sentiment/config.py to fit the new implementation
+- Re-generation pipeline sucessfully setup and running
+- Grok3 scrapper is currently being implemented and developed
