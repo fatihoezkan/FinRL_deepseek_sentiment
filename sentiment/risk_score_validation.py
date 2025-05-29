@@ -1,10 +1,8 @@
 # sentiment_validation.py
 from huggingface_hub import login
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
-from config import TEMP_DATE_RISK_CSV, TEMP_PROCESSED_JSON,VALIDATION_LLM, HF_TOKEN, device, MODEL_CACHE_DIR
+from config import VALIDATION_LLM, HF_TOKEN, device, MODEL_CACHE_DIR
 from risk_score_generation import get_risk_score
-import pandas as pd
-import json
 import torch
 import re
 
@@ -74,26 +72,26 @@ def validate_risk_score(val_pipeline, header, content, assigned_score):
 
     try:
         prompt_instruction = f"""### Instruction:
-You are a meticulous financial analyst. Your task is to validate a pre-assigned risk score for Nvidia stock based on the provided news article.
-The risk score ranges from 1 to 5:
-1 = Very Low Risk (Strongly positive sentiment, clear tailwinds for Nvidia)
-2 = Low Risk (Generally positive sentiment, minor or distant concerns for Nvidia)
-3 = Moderate Risk (Mixed sentiment, unclear impact, or balanced positive/negative factors for Nvidia)
-4 = High Risk (Generally negative sentiment, significant headwinds or threats for Nvidia)
-5 = Very High Risk (Strongly negative sentiment, severe immediate threats or problems for Nvidia)
+        You are a meticulous financial analyst. Your task is to validate a pre-assigned risk score for Nvidia stock based on the provided news article.
+        The risk score ranges from 1 to 5:
+        1 = Very Low Risk (Strongly positive sentiment, clear tailwinds for Nvidia)
+        2 = Low Risk (Generally positive sentiment, minor or distant concerns for Nvidia)
+        3 = Moderate Risk (Mixed sentiment, unclear impact, or balanced positive/negative factors for Nvidia)
+        4 = High Risk (Generally negative sentiment, significant headwinds or threats for Nvidia)
+        5 = Very High Risk (Strongly negative sentiment, severe immediate threats or problems for Nvidia)
 
-Analyze the sentiment and implications of the news article (headline and content) concerning Nvidia.
-Then, evaluate if the 'Assigned Risk Score' is appropriate.
+        Analyze the sentiment and implications of the news article (headline and content) concerning Nvidia.
+        Then, evaluate if the 'Assigned Risk Score' is appropriate.
 
-Respond with only 'VALID' or 'INVALID'. After your 'VALID' or 'INVALID' response, provide a brief, one-sentence explanation for your decision. Do not add any other text.
+        Respond with only 'VALID' or 'INVALID'. After your 'VALID' or 'INVALID' response, provide a brief, one-sentence explanation for your decision. Do not add any other text.
 
-### Input:
-Headline: '{header}'
-Content: '{content}'
-Assigned Risk Score: '{assigned_score}'
+        ### Input:
+        Headline: '{header}'
+        Content: '{content}'
+        Assigned Risk Score: '{assigned_score}'
 
-### Response:
-Validation Result:"""
+        ### Response:
+        Validation Result:"""
 
         response_text = val_pipeline(prompt_instruction)[0]['generated_text'].strip()
         print(f"\nRaw Validation Response for score {assigned_score} ('{header}'):\n'{response_text}'")

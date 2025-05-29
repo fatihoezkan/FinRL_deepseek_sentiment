@@ -6,11 +6,10 @@ from risk_score_validation import validate_all_scores, regeneration
 import json
 import sys
 
-
 if __name__ == "__main__":
     try:
         # Extract yesterday's news from news.csv and save it as JSON file
-        # data_preprocessing(path=RAW_DATA_CSV)
+        data_preprocessing(path=RAW_DATA_CSV)
         print("\n--- Data preprocessing completed ---\n")
 
         # Get the processed data JSON file

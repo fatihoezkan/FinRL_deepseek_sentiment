@@ -10,7 +10,6 @@ import sys
 tokenizer = AutoTokenizer.from_pretrained(G_LLM)
 model = AutoModelForCausalLM.from_pretrained(G_LLM)
 
-risk_scores = []
 scored_articles = []
 
 def get_risk_score(source, header, content):
