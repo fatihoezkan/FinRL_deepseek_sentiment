@@ -1,0 +1,8 @@
+clonenv/
+__pycache__/
+.env
+requirements.txt
+scrape/cookies.txt
+scrape/test.py
+sentiment/requirements.txt
+sentiment/cache_models

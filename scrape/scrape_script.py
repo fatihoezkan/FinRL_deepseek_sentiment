@@ -13,6 +13,15 @@ from datetime import datetime, timedelta
 from urllib.parse import urlparse
 import re
 import tldextract
+from config import GROK3_ANONUSERID, GROK3_CHALLENGE, GROK3_SIGNATURE, GROK3_SSO, GROK3_SSO_RW
+
+# Import GrokClient
+# Make sure you have installed it: pip install . in the grok3-api directory
+try:
+    from grok_client import GrokClient
+except ImportError:
+    print("Warning: grok_client not found. Grok3 scraping will be skipped.")
+    GrokClient = None # Set to None if not available
 
 # --------------------------------------------------------------------------------------
 REDDIT_CONFIG = {
@@ -207,13 +216,119 @@ def scrape_newsapi():
     print("NewsAPI done")
     return results
 
+def scrape_grok3():
+    print("Scraping Grok3 (X) data for NVIDIA...")
+    results = []
+
+    if not GrokClient:
+        print("GrokClient not available. Skipping Grok3 scraping.")
+        return results
+
+    # Check if all necessary cookies are set
+    cookies = {
+        "x-anonuserid": GROK3_ANONUSERID,
+        "x-challenge": GROK3_CHALLENGE,
+        "x-signature": GROK3_SIGNATURE,
+        "sso": GROK3_SSO,
+        "sso-rw": GROK3_SSO_RW
+    }
+
+    if not all(cookies.values()):
+        print("Warning: Grok3 API cookies are not fully set in environment variables. Skipping Grok3 scraping.")
+        return results
+
+    try:
+        client = GrokClient(cookies)
+
+        # Craft a precise prompt to minimize hallucination and get structured data
+        prompt = f"""
+        As a highly analytical financial expert, summarize the key discussions and sentiment among X (Twitter) users regarding NVIDIA stock (NVDA) from the last 24-48 hours. Focus solely on financial implications, stock performance, market sentiment, and any significant news or rumors directly impacting NVDA.
+
+        Structure your response as follows:
+        Headline: A concise, catchy headline summarizing the overall sentiment or most significant news.
+        Summary Points:
+        - Point 1: Briefly describe a key topic or development.
+        - Point 2: Briefly describe another key topic or development.
+        - ... (add more points as necessary)
+        Overall Sentiment: Briefly state the prevailing sentiment (e.g., "Bullish," "Bearish," "Mixed," "Cautious optimism").
+
+        Ensure all information is factual and verifiable based on X discussions. Do NOT invent information or speculate beyond what is being discussed. Prioritize data-driven insights.
+        """
+
+        response_text = client.send_message(prompt)
+        print(f"Raw Grok3 Response:\n{response_text[:500]}...") # Print first 500 chars
+
+        # --- Parse Grok3's response ---
+        # This parsing is critical to get the data into the desired format
+        title = "Grok3 X (Twitter) Summary on NVIDIA Stock"
+        full_text_content = ""
+        overall_sentiment = "Mixed" # Default sentiment
+
+        # Attempt to extract Headline
+        headline_match = re.search(r"Headline:\s*(.*)", response_text, re.IGNORECASE)
+        if headline_match:
+            title = headline_match.group(1).strip()
+            # If the headline is just "Grok3 X (Twitter) Summary...", make it more specific
+            if "Grok3 X (Twitter) Summary" in title and "NVIDIA" in response_text:
+                title = f"Grok3 X Summary: {title}" if len(title) < 50 else title
+
+
+        # Attempt to extract Summary Points
+        summary_points_match = re.search(r"Summary Points:\s*(.*?)(?=\nOverall Sentiment:|\Z)", response_text, re.IGNORECASE | re.DOTALL)
+        if summary_points_match:
+            summary_points_raw = summary_points_match.group(1).strip()
+            # Replace bullet points with numbered points or just concatenate with space
+            full_text_content = re.sub(r"-\s*", "", summary_points_raw).replace("\n", " ").strip()
+            if full_text_content:
+                full_text_content = "X (Twitter) discussions reveal: " + full_text_content
+        
+        # Attempt to extract Overall Sentiment
+        sentiment_match = re.search(r"Overall Sentiment:\s*(.*)", response_text, re.IGNORECASE)
+        if sentiment_match:
+            overall_sentiment = sentiment_match.group(1).strip()
+            if overall_sentiment: # Append sentiment to full_text_content if found
+                full_text_content += f" Overall sentiment on X: {overall_sentiment}."
+        
+        # Fallback if parsing was poor
+        if not full_text_content and response_text:
+            full_text_content = "Grok3's summary from X (Twitter) discussions about NVIDIA: " + response_text.replace('\n', ' ').strip()
+            title = f"Grok3 X Summary on NVIDIA Stock: {overall_sentiment}"
+
+        # Ensure title and content are not empty
+        if not title:
+            title = "Grok3 X (Twitter) Summary on NVIDIA Stock"
+        if not full_text_content:
+            full_text_content = "Could not extract structured content from Grok3's response. Raw response: " + response_text.replace('\n', ' ').strip()
+
+        # Add a unique "link" for Grok3 entries, as they don't have a direct URL
+        # We can use a hash of the content to make it unique if date is the same
+        current_timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        grok_link_hash = hashlib.md5(f"{current_timestamp}{title}{full_text_content}".encode('utf-8')).hexdigest()
+        grok_link = f"[https://grok.com/summary/](https://grok.com/summary/){grok_link_hash}"
+
+
+        if contains_relevant_keywords(title, full_text_content):
+            results.append({
+                "Date and Timestamp": current_timestamp,
+                "Title": title,
+                "Full Text": full_text_content,
+                "Source": "Grok3", # New source type
+                "Link": grok_link
+            })
+    except Exception as e:
+        print(f"Error scraping Grok3: {e}")
+        # Optionally, log the full error or response_text for debugging
+        # print(f"Failed Grok3 Response: {response_text}")
+    
+    print("Grok3 scraping done.")
+    return results
 # --------------------------------------------------------------------------------------
 
 def main():
     all_data = []
     seen_hashes = load_seen_hashes()
 
-    for scraper in [scrape_reddit, scrape_newsapi, scrape_rss]:
+    for scraper in [scrape_reddit, scrape_newsapi, scrape_rss, scrape_grok3]:
         data = scraper()
         for item in data:
             item_hash = compute_hash(item['Title'], item['Link'])
@@ -237,6 +352,8 @@ def main():
             new_data_df.to_csv(COMBINED_OUTPUT_FILE, index=False, sep=';', quoting=csv.QUOTE_ALL)
 
         save_seen_hashes(seen_hashes)
+    else:
+        print("No new data scraped.")
 
 if __name__ == "__main__":
     main()
