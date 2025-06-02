@@ -1,5 +1,0 @@
-After our agreement to report to you, as I could unfortunately never join the classes, these are the contributions I made to the project until the 2nd of May:
-- Slightly atered the data processing pipeline
-- Setup the environment and the configs to further use LLMs and required pipelines
-- Sucessfully implemented the risk score generator pipeline
-- Sucessfully implemented the risk score aggregation pipeline

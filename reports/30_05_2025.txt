@@ -1,4 +1,0 @@
-These are my contributions to the project in the last week:
-- Grok3 scrapper was setup but issues/changes with the library implementation
-- Thus, we decided to not include twitter data
-- Pull request on main branch (resolving some problems)

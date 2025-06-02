@@ -1,4 +1,0 @@
-These are my contributions to the project in the last week:
-- Sucessfully implemented a new module (with fake data) --> risk score validation
-- Started the new module integration with our real pipelines and data
-- Start researching for papers and references to showcase that the approaches used in this paper prove better results
