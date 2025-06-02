@@ -1,4 +1,13 @@
 datetime,source,specific_source,risk score
+2025-05-16 05:34:52,Reddit,wallstreetbets,4
+2025-05-16 06:41:14,Reddit,wallstreetbets,3
+2025-05-16 08:28:00,News,Fool,4
+2025-05-16 09:10:00,News,Fool,4
+2025-05-16 09:15:00,News,Fool,4
+2025-05-16 09:37:00,News,Yahoo Finance,3
+2025-05-16 09:44:19,News,Yahoo Finance,4
+2025-05-16 09:45:00,News,Fool,4
+2025-05-16 10:00:00,News,Investopedia,5
 2025-05-30 00:45:34,News,Yahoo Finance,4
 2025-05-30 03:14:59,News,Investopedia,3
 2025-05-30 10:00:00,News,Investopedia,3
@@ -61,3 +70,5 @@ datetime,source,specific_source,risk score
 2025-05-30 21:36:55,News,Investopedia,1
 2025-05-30 21:45:00,News,Fool,3
 2025-05-30 21:47:27,News,Investopedia,1
+
+

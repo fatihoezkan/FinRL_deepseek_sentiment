@@ -10,7 +10,7 @@ import sys
 tokenizer = AutoTokenizer.from_pretrained(G_LLM)
 model = AutoModelForCausalLM.from_pretrained(G_LLM)
 
-risk_scores = []
+scored_articles = []
 
 def get_risk_score(source, header, content):
     """
@@ -84,12 +84,13 @@ def get_risk_score(source, header, content):
 
         if match:
             score = int(match.group(1))
-            risk_scores.append(score)
+            # risk_scores.append(score)
             print(f"Extracted risk score: {score}")
-
+            return score
         else:
             print("⚠️ Could not extract risk score from response:", response)
-            risk_scores.append(3)
+            # risk_scores.append(3)
+            return 3
 
     except Exception as e:
         print(f"[Error in risk score generation] -> {e}")
@@ -107,16 +108,26 @@ def get_all_scores(json_data):
     """
     for i in tqdm(range(len(json_data)), desc="Generating risk scores"):
         print(f"Data entry number {i}:\n")
+        datetime = json_data[i]['datetime']
         source = json_data[i]['source']
         header = json_data[i]['header']
         content = json_data[i]['content']
 
-        get_risk_score(source, header, content)
+        risk_score = get_risk_score(source, header, content)
+        scored_articles.append(
+            {
+            "datetime": datetime,
+            "source": source,
+            "header": header,
+            "content": content,
+            "risk_score": risk_score
+            }
+        )
     
-    print(f'All risk scores: {risk_scores}')
+    # print(f'\nAll risk scores: {risk_scores}')
     print("Risk score generation completed.")
     
-    return risk_scores
+    return scored_articles
 
 
 def save_tmp_csv(temp_df):
