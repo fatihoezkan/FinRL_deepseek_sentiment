@@ -3,11 +3,12 @@ import numpy as np
 import yfinance as yf
 from finrl.meta.env_stock_trading.env_stocktrading import StockTradingEnv
 from finrl.agents.stablebaselines3.models import DRLAgent
-from stable_baselines3 import A2C, SAC
+from stable_baselines3 import A2C, SAC , PPO, TD3
 from pypfopt.efficient_frontier import EfficientFrontier
 from finrl.config import INDICATORS, TRAINED_MODEL_DIR
 from config import TRADE_CSV, AGGREGATED_RISK_SCORE
 from custom_env import RiskAwareStockTradingEnv
+
 
 
 """
@@ -32,6 +33,16 @@ def load_trained_sac():
     trained_sac = SAC.load(TRAINED_MODEL_DIR + "/agent_sac")
     
     return trained_sac
+
+def load_trained_ppo():
+    trained_ppo = PPO.load(TRAINED_MODEL_DIR + "/agent_ppo")
+    
+    return trained_ppo
+
+def load_trained_td3():
+    trained_td3 = TD3.load(TRAINED_MODEL_DIR + "/agent_td3")
+    
+    return trained_td3
 
 
 def load_aggregated_risk_score(trade):
@@ -234,6 +245,10 @@ def merge_results(
     df_account_value_a2c_agent2, 
     df_account_value_sac_agent1,
     df_account_value_sac_agent2,
+    df_account_value_ppo_agent1,
+    df_account_value_ppo_agent2,
+    df_account_value_td3_agent1,
+    df_account_value_td3_agent2,
     MVO_result, 
     dji
     ):
@@ -250,6 +265,19 @@ def merge_results(
     df_result_sac_agent2 = ensure_utc_index(df_account_value_sac_agent2.set_index(df_account_value_sac_agent2.columns[0]))
     df_result_sac_agent2.columns = ['sac_agent2']
 
+    df_result_ppo_agent1 = ensure_utc_index(df_account_value_ppo_agent1.set_index(df_account_value_ppo_agent1.columns[0]))
+    df_result_ppo_agent1.columns = ['ppo_agent1']
+
+    df_result_ppo_agent2 = ensure_utc_index(df_account_value_ppo_agent2.set_index(df_account_value_ppo_agent2.columns[0]))
+    df_result_ppo_agent2.columns = ['ppo_agent2']
+
+    df_result_td3_agent1 = ensure_utc_index(df_account_value_td3_agent1.set_index(df_account_value_td3_agent1.columns[0]))
+    df_result_td3_agent1.columns = ['td3_agent1']
+
+    df_result_td3_agent2 = ensure_utc_index(df_account_value_td3_agent2.set_index(df_account_value_td3_agent2.columns[0]))
+    df_result_td3_agent2.columns = ['td3_agent2']
+
+
     MVO_result.columns = ['mvo']
     dji.columns = ['dji']
 
@@ -258,6 +286,10 @@ def merge_results(
     result = result.join(df_result_a2c_agent2, how='outer')
     result = result.join(df_result_sac_agent1, how='outer')
     result = result.join(df_result_sac_agent2, how='outer')
+    result = result.join(df_result_ppo_agent1, how='outer')
+    result = result.join(df_result_ppo_agent2, how='outer')
+    result = result.join(df_result_td3_agent1, how='outer')
+    result = result.join(df_result_td3_agent2, how='outer')
     result = result.join(MVO_result, how='outer')
     result = result.join(dji, how='outer')
 

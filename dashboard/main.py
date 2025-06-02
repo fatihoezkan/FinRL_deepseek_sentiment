@@ -21,6 +21,8 @@ def load_data():
     # Calculate percentage difference between Agent 2 and Agent 1
     df['A2C % Diff'] = 100 * (df["A2C Agent 2"] - df["A2C Agent 1"]) / df["A2C Agent 1"]
     df['SAC % Diff'] = 100 * (df["SAC Agent 2"] - df["SAC Agent 1"]) / df["SAC Agent 1"]
+    df['PPO % Diff'] = 100 * (df["PPO Agent 2"] - df["PPO Agent 1"]) / df["PPO Agent 1"]
+    df['TD3 % Diff'] = 100 * (df["TD3 Agent 2"] - df["TD3 Agent 1"]) / df["TD3 Agent 1"]
 
     return df
 
@@ -28,7 +30,7 @@ df = load_data()
 
 # Melt the dataframe for Altair
 df_melted = df.melt(
-    id_vars=['date', 'A2C % Diff', 'SAC % Diff'], 
+    id_vars=['date', 'A2C % Diff', 'SAC % Diff', 'PPO % Diff', 'TD3 % Diff'], 
     var_name='Agent', 
     value_name='Portfolio Value'
 )
@@ -39,6 +41,10 @@ custom_colors = {
     "A2C Agent 2": "#FF8C00",
     "SAC Agent 1": "#4169E1",
     "SAC Agent 2": "#9370DB",
+    "PPO Agent 1": "#32CD32",
+    "PPO Agent 2": "#FFD700",
+    "TD3 Agent 1": "#FF69B4",
+    "TD3 Agent 2": "#8A2BE2",
     "Mean Var": "#5F9EA0",
     "djia": "#9ACD32"
 }
@@ -49,6 +55,10 @@ def compute_tooltip(row):
         return f"{row['A2C % Diff']:.2f}%"
     elif row['Agent'] == 'SAC Agent 2':
         return f"{row['SAC % Diff']:.2f}%"
+    elif row['Agent'] == 'PPO Agent 2':
+        return f"{row['PPO % Diff']:.2f}%"
+    elif row['Agent'] == 'TD3 Agent 2':
+        return f"{row['TD3 % Diff']:.2f}%"
     else:
         return "-"
 
