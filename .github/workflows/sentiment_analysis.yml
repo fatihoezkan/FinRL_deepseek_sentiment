@@ -25,6 +25,8 @@ jobs:
 
       - name: Run main.py
         working-directory: ./sentiment
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           python main.py
       
