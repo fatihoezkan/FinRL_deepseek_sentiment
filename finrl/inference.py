@@ -1,6 +1,5 @@
 from utils import *
 from config import RESULTS_CSV
-import pandas as pd
 import sys
 
 
@@ -18,24 +17,36 @@ def get_inference():
     """ 
     try:
         # Load train and trade data
-        _, trade = load_train_trade()
+        trade = load_trade()
         print("Loaded train and trade csv.")
         
-        # Load the pre-trained model
+        # Load the pre-trained A2C model
         trained_a2c = load_trained_a2c()
         print("Loaded trained A2C model.")
+        
+        # Load the pre-trained SAC model
+        trained_sac = load_trained_sac()
+        print("Loaded trained SAC model.")
          
         # Load aggregated_risk_scores
         trade_sentiment = load_aggregated_risk_score(trade)
         print("Loaded aggregated risk scores and merged with trade data.")
 
-        # Predict Agent 1
+        # Predict A2C Agent 1
         df_account_value_a2c_agent1, _ = predict_agent_1(trade, trained_a2c)
-        print("Agent 1 prediction done.")
+        print("A2C Agent 1 prediction done.")
         
-        # Predict Agent 2
+        # Predict SAC Agent 1
+        df_account_value_sac_agent1, _ = predict_agent_1(trade, trained_sac)
+        print("SAC Agent 1 prediction done.")
+        
+        # Predict A2C Agent 2
         df_account_value_a2c_agent2, _ = predict_agent_2(trade, trained_a2c, trade_sentiment)
-        print("Agent 2 prediction done.")
+        print("A2C Agent 2 prediction done.")
+        
+        # Predict SAC Agent 2
+        df_account_value_sac_agent2, _ = predict_agent_2(trade, trained_sac, trade_sentiment)
+        print("SAC Agent 2 prediction done.")
 
         # Calculate Mean Variance Optimization (MVO)
         StockData, arStockPrices, rows, cols = calculate_mvo(trade)
@@ -54,7 +65,14 @@ def get_inference():
         print("Loaded DJIA hourly data.")
         
         # Merge results
-        result = merge_results(df_account_value_a2c_agent1, df_account_value_a2c_agent2, MVO_result, dji)
+        result = merge_results(
+                    df_account_value_a2c_agent1, 
+                    df_account_value_a2c_agent2, 
+                    df_account_value_sac_agent1,
+                    df_account_value_sac_agent2,
+                    MVO_result, 
+                    dji
+                )
         
         # Save results to csv
         result.to_csv(RESULTS_CSV)

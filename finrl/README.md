@@ -13,14 +13,14 @@ The goal is to see Agent 2 perform better in its trades, given that it has addit
 There are 5 principal python scripts in this directory. The purpose of each script is as follows:
 
 ### `processing.py`
- - Downloads hourly NVDA stock data from yahoo finance between the start date (2024-1-1) and end date (yesterday)
+ - Downloads hourly NVDA stock data from yahoo finance 600 days ago from the current date.
  - Preprocesses and combines the data with stock indicators using FinRL's FeatureEngineer
  - Splits the data into train/trade set (80%-20%) and saves them into `train_data.csv` and `trade_data.csv` for the next stage
 
 ### `training.py`
- - Trains the A2C model using `train_data.csv` obtained from `processing.py`
+ - Trains the A2C and SAC model using `train_data.csv` obtained from `processing.py`
  - Called only if it is necessary to retrain the model
- - Otherwise, the pre-trained A2C model in `trained_models/agent_a2c.zip` which was trained on the stock price data between the recent 1.3 year (2024-1-1 to 2025-4-14) will be used, as it currently performs well
+ - Otherwise, the pre-trained A2C and SAC model in `trained_models/` which was trained on the stock price data between 2023-10-02 to 2025-01-24 will be used.
 
 ### `utils.py`
  - Contains all the necessary functions needed in `inference.py`
@@ -43,8 +43,9 @@ There are 5 principal python scripts in this directory. The purpose of each scri
  - `custom_env.py` shows a custom class built for Agent 2's Trading Environment to take the news sentiment risk scores into consideration during its trading steps.
  - This class inherits the StockTradingEnv class from **FinRL**, and only overwrittes the step() function to give 'reward' or 'penalty' to the agent depending on the risk scores. 
  - The amount of 'reward' or 'penalty' is indicated by a given weight value. 
- - For example, a lower risk score signals optimistic chance in its trade, thus the agent's cash balance is multiplied with a higher weight ('reward').
- - This is to mimic the agent's actions in a trading environment where the 'imaginary' state space includes the sentiment risk scores, as it is not possible to directly train the A2C on a state space with sentiment risk scores, due to the limitations on obtaining news articles through API calls for more than a week in the past. 
+ - For example, a lower risk score signals optimistic chance in its trade, thus the agent's state[0] is multiplied with a higher weight ('reward').
+ - state[0] is a normalized or scaled value that is part of the observation used by the agent.
+ - This is to mimic the agent's actions in a trading environment where the 'imaginary' state space includes the sentiment risk scores, as it is not possible to directly train the models on a state space with sentiment risk scores, due to the limitations on obtaining news articles through API calls for more than a week in the past. 
 
 ### ➤ ⚙️ **Automated Execution with GitHub Actions**  
  - Runs every Thursday at 10:00 (UTC).

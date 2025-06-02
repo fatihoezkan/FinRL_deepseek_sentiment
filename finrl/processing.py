@@ -10,7 +10,7 @@ import sys
 
 def process():
     """
-    This function helps to download hourly NVDA stock data from yahoo finance between the start date (2024-1-1) and end date (yesterday).
+    This function helps to download hourly NVDA stock data from yahoo finance 600 days ago from the current date.
     After loading the hourly data, it is pre-processed and combined with stock indicators using FinRL's FeatureEngineer.
     Finally, it splits the data into train/trade set (80%-20%) and saves them into csv files for the next stage.
     
@@ -20,8 +20,8 @@ def process():
     """
     try:
         # Specify period for train and trade data
-        start_date = datetime.date(2024, 1, 1)
-        end_date = datetime.date.today() - datetime.timedelta(days=1)  
+        end_date = datetime.datetime.now()
+        start_date = end_date - datetime.timedelta(days=600)
 
         start_date = start_date.strftime("%Y-%m-%d")
         end_date = end_date.strftime("%Y-%m-%d")

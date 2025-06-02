@@ -51,7 +51,7 @@ There are 4 python scripts in this directory. The purpose of each script is as f
 
 
 ### ➤ ⚙️ **Automated Execution with GitHub Actions**  
- - Runs daily at 10:00 (UTC).
+ - Runs every Tuesday - Saturday at 10:00 (UTC).
 ---
 
 ### 🚀 How to run the script manually

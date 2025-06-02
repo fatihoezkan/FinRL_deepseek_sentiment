@@ -3,11 +3,10 @@ import numpy as np
 import yfinance as yf
 from finrl.meta.env_stock_trading.env_stocktrading import StockTradingEnv
 from finrl.agents.stablebaselines3.models import DRLAgent
-from stable_baselines3 import A2C
+from stable_baselines3 import A2C, SAC
 from pypfopt.efficient_frontier import EfficientFrontier
 from finrl.config import INDICATORS, TRAINED_MODEL_DIR
-from gymnasium import spaces
-from config import TRAIN_CSV, TRADE_CSV, AGGREGATED_RISK_SCORE
+from config import TRADE_CSV, AGGREGATED_RISK_SCORE
 from custom_env import RiskAwareStockTradingEnv
 
 
@@ -15,22 +14,24 @@ from custom_env import RiskAwareStockTradingEnv
 utils.py contains all the necessary functions needed in inference.py    
 """ 
 
-def load_train_trade():
-    train = pd.read_csv(TRAIN_CSV)
+def load_trade():
     trade = pd.read_csv(TRADE_CSV)
-
-    train = train.set_index(train.columns[0])
-    train.index.names = ['']
     trade = trade.set_index(trade.columns[0])
     trade.index.names = ['']
     
-    return train, trade
+    return trade
 
 
 def load_trained_a2c():
     trained_a2c = A2C.load(TRAINED_MODEL_DIR + "/agent_a2c")
     
     return trained_a2c
+
+
+def load_trained_sac():
+    trained_sac = SAC.load(TRAINED_MODEL_DIR + "/agent_sac")
+    
+    return trained_sac
 
 
 def load_aggregated_risk_score(trade):
@@ -54,7 +55,7 @@ def load_aggregated_risk_score(trade):
     return trade_sentiment
 
 
-def predict_agent_1(trade, trained_a2c):
+def predict_agent_1(trade, trained_model):
     # Setup the environment
     stock_dimension = len(trade.tic.unique())
     state_space = 1 + 2 * stock_dimension + len(INDICATORS) * stock_dimension
@@ -75,15 +76,15 @@ def predict_agent_1(trade, trained_a2c):
     e_trade_gym = StockTradingEnv(df=trade, **env_kwargs)
     env_trade, _ = e_trade_gym.get_sb_env()
 
-    df_account_value_a2c_agent1, df_actions_a2c_agent1 = DRLAgent.DRL_prediction(
-        model=trained_a2c,
+    df_account_value_agent1, df_actions_agent1 = DRLAgent.DRL_prediction(
+        model=trained_model,
         environment=e_trade_gym
     )
     
-    return df_account_value_a2c_agent1, df_actions_a2c_agent1
+    return df_account_value_agent1, df_actions_agent1
 
 
-def predict_agent_2(trade, trained_a2c, trade_sentiment):
+def predict_agent_2(trade, trained_model, trade_sentiment):
     # Setup the environment
     stock_dimension_agent2 = len(trade.tic.unique())
     state_space_agent2 = 1 + 2 * stock_dimension_agent2 + len(INDICATORS) * stock_dimension_agent2
@@ -106,12 +107,12 @@ def predict_agent_2(trade, trained_a2c, trade_sentiment):
 
     env_trade_sentiment, _ = e_trade_sentiment.get_sb_env()
     
-    df_account_value_a2c_agent2, df_actions_a2c_agent2 = DRLAgent.DRL_prediction(
-        model=trained_a2c,
+    df_account_value_agent2, df_actions_agent2 = DRLAgent.DRL_prediction(
+        model=trained_model,
         environment=e_trade_sentiment
     )
 
-    return df_account_value_a2c_agent2, df_actions_a2c_agent2
+    return df_account_value_agent2, df_actions_agent2
 
 
 def process_df_for_mvo(df):
@@ -228,16 +229,40 @@ def ensure_utc_index(df):
     return df
 
 
-def merge_results(df_account_value_a2c_agent1, df_account_value_a2c_agent2, MVO_result, dji):
-    df_result_a2c_agent1 = ensure_utc_index(df_account_value_a2c_agent1.set_index(df_account_value_a2c_agent1.columns[0]))
-    df_result_a2c_agent2 = ensure_utc_index(df_account_value_a2c_agent2.set_index(df_account_value_a2c_agent2.columns[0]))
-    result = pd.DataFrame()
-    result = pd.merge(result, df_result_a2c_agent1, how='outer', left_index=True, right_index=True)
-    result = pd.merge(result, df_result_a2c_agent2, how='outer', left_index=True, right_index=True)
-    result = pd.merge(result, MVO_result, how='outer', left_index=True, right_index=True)
-    result = pd.merge(result, dji, how='outer', left_index=True, right_index=True).fillna(method='bfill')
+def merge_results(
+    df_account_value_a2c_agent1, 
+    df_account_value_a2c_agent2, 
+    df_account_value_sac_agent1,
+    df_account_value_sac_agent2,
+    MVO_result, 
+    dji
+    ):
     
-    col_name = ['A2C Agent1', 'A2C Agent2', 'Mean Var', 'djia']
+    df_result_a2c_agent1 = ensure_utc_index(df_account_value_a2c_agent1.set_index(df_account_value_a2c_agent1.columns[0]))
+    df_result_a2c_agent1.columns = ['a2c_agent1']
+
+    df_result_a2c_agent2 = ensure_utc_index(df_account_value_a2c_agent2.set_index(df_account_value_a2c_agent2.columns[0]))
+    df_result_a2c_agent2.columns = ['a2c_agent2']
+
+    df_result_sac_agent1 = ensure_utc_index(df_account_value_sac_agent1.set_index(df_account_value_sac_agent1.columns[0]))
+    df_result_sac_agent1.columns = ['sac_agent1']
+
+    df_result_sac_agent2 = ensure_utc_index(df_account_value_sac_agent2.set_index(df_account_value_sac_agent2.columns[0]))
+    df_result_sac_agent2.columns = ['sac_agent2']
+
+    MVO_result.columns = ['mvo']
+    dji.columns = ['dji']
+
+    # Join
+    result = df_result_a2c_agent1.copy()
+    result = result.join(df_result_a2c_agent2, how='outer')
+    result = result.join(df_result_sac_agent1, how='outer')
+    result = result.join(df_result_sac_agent2, how='outer')
+    result = result.join(MVO_result, how='outer')
+    result = result.join(dji, how='outer')
+
+    result = result.fillna(method='bfill')
+    col_name = ['A2C Agent 1', 'A2C Agent 2', 'SAC Agent 1', 'SAC Agent 2', 'Mean Var', 'djia']
     result.columns = col_name
     result = result.dropna(subset=['djia'])
     
