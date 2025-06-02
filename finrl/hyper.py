@@ -130,7 +130,7 @@ def objective_a2c(trial):
     return mean_reward
 
 study_a2c = optuna.create_study(direction="maximize")
-study_a2c.optimize(objective_a2c, n_trials=20)
+study_a2c.optimize(objective_a2c, n_trials=30)
 
 with open("best_hyperparams_a2c.json", "w") as f:
     json.dump(study_a2c.best_trial.params, f, indent=4)
@@ -165,7 +165,7 @@ def objective_sac(trial):
     return mean_reward
 
 study_sac = optuna.create_study(direction="maximize")
-study_sac.optimize(objective_sac, n_trials=20)
+study_sac.optimize(objective_sac, n_trials=30)
 
 with open("best_hyperparams_sac.json", "w") as f:
     json.dump(study_sac.best_trial.params, f, indent=4)
@@ -199,7 +199,7 @@ def objective_td3(trial):
     return mean_reward
 
 study_td3 = optuna.create_study(direction="maximize")
-study_td3.optimize(objective_td3, n_trials=20)
+study_td3.optimize(objective_td3, n_trials=30)
 
 with open("best_hyperparams_td3.json", "w") as f:
     json.dump(study_td3.best_trial.params, f, indent=4)
