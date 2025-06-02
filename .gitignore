@@ -6,3 +6,4 @@ scrape/cookies.txt
 scrape/test.py
 sentiment/requirements.txt
 sentiment/cache_models
+sentiment/__pycache__

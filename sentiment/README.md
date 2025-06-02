@@ -8,7 +8,7 @@ It aims to extract the daily scrapped news from yesterday to obtain a risk score
 
 ## 🔍 Purpose
 
-There are 4 python scripts in this directory. The purpose of each script is as follows:
+There are 5 python scripts in this directory. The purpose of each script is as follows:
 
 ### `data_preprocessing.py`
  - Extracts yesterday's scrapped news about **Nvidia stock** from `scrape/news.csv`
@@ -37,7 +37,7 @@ There are 4 python scripts in this directory. The purpose of each script is as f
 ---
 
 ## 📦 Features
-### ✅ **Post-generation risk score validation**
+### ➤ ✅ **Post-generation risk score validation**
 - To be able to achieve more accuracy for the FinRL agent, the data used to train this agent needs to be correct and valid. Since an LLM is used to generate some of this data (the risk scores), validation is required to ensure high level of data quality.
 - This is done through another LLM which present a variety in pre-trained knowledge.
 ### ➤ 🔁 **Regeneration**
