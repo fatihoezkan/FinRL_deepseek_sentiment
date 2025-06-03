@@ -1,4 +1,5 @@
 import optuna
+import csv
 from stable_baselines3 import A2C, PPO, SAC, TD3
 from stable_baselines3.common.evaluation import evaluate_policy
 from finrl.meta.env_stock_trading.env_stocktrading import StockTradingEnv
@@ -64,6 +65,43 @@ def make_eval_env():
     )
     return eval_env
 
+
+def log_trial_result_factory(filename):
+    def log_trial_result(study, trial):
+        fieldnames = list(trial.params.keys()) + ['value', 'number']
+        file_exists = False
+        try:
+            with open(filename, 'r'):
+                file_exists = True
+        except FileNotFoundError:
+            file_exists = False
+
+        with open(filename, 'a', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            if not file_exists:
+                writer.writeheader()
+            row = {**trial.params, 'value': trial.value, 'number': trial.number}
+            writer.writerow(row)
+    return log_trial_result
+
+
+def log_trial_result(study, trial):
+    # Log each trial's result to a CSV file
+    fieldnames = list(trial.params.keys()) + ['value', 'number']
+    file_exists = False
+    try:
+        with open('ppo_trials_log.csv', 'r'):
+            file_exists = True
+    except FileNotFoundError:
+        file_exists = False
+
+    with open('ppo_trials_log.csv', 'a', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        if not file_exists:
+            writer.writeheader()
+        row = {**trial.params, 'value': trial.value, 'number': trial.number}
+        writer.writerow(row)
+
 def objective(trial):
     algo_class = PPO  
     env = make_env()  # Your custom training env
@@ -92,7 +130,7 @@ def objective(trial):
     return mean_reward
 
 study = optuna.create_study(direction="maximize")
-study.optimize(objective, n_trials=20)
+study.optimize(objective, n_trials=30, callbacks=[log_trial_result_factory('ppo_trials_log.csv')])
 
 # Save best trial hyperparameters to a JSON file
 import json
@@ -130,7 +168,7 @@ def objective_a2c(trial):
     return mean_reward
 
 study_a2c = optuna.create_study(direction="maximize")
-study_a2c.optimize(objective_a2c, n_trials=30)
+study_a2c.optimize(objective_a2c, n_trials=30, callbacks=[log_trial_result_factory('a2c_trials_log.csv')])
 
 with open("best_hyperparams_a2c.json", "w") as f:
     json.dump(study_a2c.best_trial.params, f, indent=4)
@@ -165,7 +203,7 @@ def objective_sac(trial):
     return mean_reward
 
 study_sac = optuna.create_study(direction="maximize")
-study_sac.optimize(objective_sac, n_trials=30)
+study_sac.optimize(objective_sac, n_trials=30, callbacks=[log_trial_result_factory('sac_trials_log.csv')])
 
 with open("best_hyperparams_sac.json", "w") as f:
     json.dump(study_sac.best_trial.params, f, indent=4)
@@ -199,11 +237,14 @@ def objective_td3(trial):
     return mean_reward
 
 study_td3 = optuna.create_study(direction="maximize")
-study_td3.optimize(objective_td3, n_trials=30)
+study_td3.optimize(objective_td3, n_trials=30, callbacks=[log_trial_result_factory('td3_trials_log.csv')])
 
 with open("best_hyperparams_td3.json", "w") as f:
     json.dump(study_td3.best_trial.params, f, indent=4)
 
 print("Best trial TD3:")
 print(f"  Value (Reward): {study_td3.best_trial.value}")
-print(f"  Params: {study_td3.best_trial.params}")
+print(f"  Params: {study_td3.best_trial.params}")# ...existing code...
+
+
+
