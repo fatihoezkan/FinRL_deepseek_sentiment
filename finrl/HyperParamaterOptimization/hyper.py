@@ -1,5 +1,6 @@
 import optuna
 import csv
+import json
 from stable_baselines3 import A2C, PPO, SAC, TD3
 from stable_baselines3.common.evaluation import evaluate_policy
 from finrl.meta.env_stock_trading.env_stocktrading import StockTradingEnv
@@ -133,7 +134,7 @@ study = optuna.create_study(direction="maximize")
 study.optimize(objective, n_trials=30, callbacks=[log_trial_result_factory('ppo_trials_log.csv')])
 
 # Save best trial hyperparameters to a JSON file
-import json
+
 with open("best_hyperparams_ppo.json", "w") as f:
     json.dump(study.best_trial.params, f, indent=4)
 
@@ -245,6 +246,3 @@ with open("best_hyperparams_td3.json", "w") as f:
 print("Best trial TD3:")
 print(f"  Value (Reward): {study_td3.best_trial.value}")
 print(f"  Params: {study_td3.best_trial.params}")# ...existing code...
-
-
-
