@@ -294,7 +294,7 @@ def merge_results(
     result = result.join(dji, how='outer')
 
     result = result.fillna(method='bfill')
-    col_name = ['A2C Agent 1', 'A2C Agent 2', 'SAC Agent 1', 'SAC Agent 2', 'Mean Var', 'djia']
+    col_name = ['A2C Agent 1', 'A2C Agent 2', 'SAC Agent 1', 'SAC Agent 2','PPO Agent 1','PPO Agent 2', 'TD3 Agent 1', 'TD3 Agent 2', 'Mean Var', 'djia']
     result.columns = col_name
     result = result.dropna(subset=['djia'])
     

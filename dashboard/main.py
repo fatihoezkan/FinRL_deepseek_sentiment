@@ -14,7 +14,7 @@ st.markdown(
 # Load and preprocess data
 @st.cache_data
 def load_data():
-    df = pd.read_csv('../finrl/results.csv')
+    df = pd.read_csv('results.csv')
     df['date'] = pd.to_datetime(df['date'])
     df = df.set_index('date').reset_index()
     

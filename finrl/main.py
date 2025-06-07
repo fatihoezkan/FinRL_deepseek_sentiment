@@ -1,5 +1,5 @@
 from processing import process
-from training import train_a2c, train_sac
+from training import train_a2c, train_sac, train_ppo , train_all ,train_td3
 from inference import get_inference
 import sys
 
@@ -21,6 +21,9 @@ if __name__ == "__main__":
         '''
         # train_a2c()
         # train_sac()
+        # train_ppo()
+        # train_td3()
+        train_all()
         print("Stage 2: Training skipped.")
         print("---------------------------------------------")
         

@@ -74,10 +74,18 @@ def train_a2c():
     try:
         env_train_a2c = setup_environment("a2c")
         print("Environment for A2C agent set up successfully.")
-        
+
+        A2C_PARAMS = {
+            "n_steps": 64,                     # Smaller n_steps for hourly data
+            "ent_coef": 4.053861348529222e-05,                 # Entropy coefficient
+            "learning_rate": 6.521490192554121e-05,           # Learning rate
+            "gamma": 0.9332012643665162                    # Discount factor 
+        }
+
+
         # Initialize agent
         agent_a2c = DRLAgent(env=env_train_a2c)
-        model_a2c = agent_a2c.get_model("a2c")
+        model_a2c = agent_a2c.get_model("a2c", model_kwargs=A2C_PARAMS)
 
         # Train the agent
         trained_a2c = agent_a2c.train_model(
@@ -112,7 +120,7 @@ def train_sac():
         SAC_PARAMS = {
             "batch_size": 128,
             "buffer_size": 100000,
-            "learning_rate": 0.0001,
+            "learning_rate": 0.00014093202597330817,
             "learning_starts": 100,
             "ent_coef": "auto_0.1",
         }
@@ -154,13 +162,10 @@ def train_ppo():
         agent_ppo = DRLAgent(env=env_train_ppo)
         
         PPO_PARAMS = {
-            "n_steps": 2048,
-            "batch_size": 128,
-            "learning_rate": 0.005,
-            "ent_coef": 0.0,
-            "clip_range": 0.2,
-            "gamma": 0.99,
-            "gae_lambda": 0.95,
+            "n_steps": 128,  # Smaller n_steps for hourly data
+            "learning_rate": 1.3575277728743006e-05,
+            "ent_coef": 2.9425153731115703e-06,
+            "gamma": 0.9951611415999558
         }
 
         model_ppo = agent_ppo.get_model("ppo", model_kwargs=PPO_PARAMS)
@@ -201,8 +206,8 @@ def train_td3():
         TD3_PARAMS = {
             "buffer_size":     300_000,
             "batch_size":      256,
-            "learning_rate":   1e-4,
-            "gamma":           0.99,
+            "learning_rate":   3.571124102615845e-05,
+            "gamma":           0.9975646320917273,
             "tau":             0.005,   # soft update
             "policy_delay":    2,       # the “delayed” part
             "target_policy_noise": 0.1,
