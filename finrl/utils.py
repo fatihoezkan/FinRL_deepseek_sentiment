@@ -6,9 +6,9 @@ from finrl.agents.stablebaselines3.models import DRLAgent
 from stable_baselines3 import A2C, SAC , PPO, TD3
 from pypfopt.efficient_frontier import EfficientFrontier
 from finrl.config import INDICATORS, TRAINED_MODEL_DIR
-from config import TRADE_CSV, AGGREGATED_RISK_SCORE
+from config import TRADE_CSV, AGGREGATED_RISK_SCORE , TURBULANCE_CSV
 from custom_env import RiskAwareStockTradingEnv
-
+from custom_env2 import RiskAwareStockTradingEnv1
 
 
 """
@@ -65,6 +65,54 @@ def load_aggregated_risk_score(trade):
 
     return trade_sentiment
 
+def load_sentiment_and_turbulence(trade, turbulence_path=TURBULANCE_CSV):
+    # Get trade with risk_score
+    trade_sentiment = load_aggregated_risk_score(trade)
+    
+    # Load turbulence data
+    turbulence_df = pd.read_csv(turbulence_path)
+    if 'date' not in turbulence_df.columns:
+        raise ValueError("'date' column not found in turbulence data.")
+    if 'turbulence_bin' not in turbulence_df.columns:
+        raise ValueError("'turbulence_bin' column not found in turbulence data.")
+    turbulence_df['date'] = pd.to_datetime(turbulence_df['date'], utc=True)
+    turbulence_df['turbulence_bin'] = turbulence_df['turbulence_bin'].fillna('low')
+    
+    # Merge on 'date'
+    merged = pd.merge(trade_sentiment, turbulence_df[['date', 'turbulence_bin']], on='date', how='left')
+    merged['turbulence_bin'] = merged['turbulence_bin'].fillna('low')
+    return merged
+
+
+def predict_agent_3(trade, trained_model, trade_turbulance):
+    # Setup the environment
+    stock_dimension_agent3 = len(trade.tic.unique())
+    state_space_agent3 = 1 + 2 * stock_dimension_agent3 + len(INDICATORS) * stock_dimension_agent3
+
+    env_kwargs_agent3 = {
+    "hmax": 500,
+    "initial_amount": 1000000,
+    "num_stock_shares": [0] * stock_dimension_agent3,
+    "buy_cost_pct": [0.001] * stock_dimension_agent3,
+    "sell_cost_pct": [0.001] * stock_dimension_agent3,
+    "state_space": state_space_agent3,
+    "stock_dim": stock_dimension_agent3,
+    "tech_indicator_list": INDICATORS,
+    "action_space": stock_dimension_agent3,
+    "reward_scaling": 1e-10,
+    }
+
+    # Initialize custom environment with trade_sentiment data
+    e_trade_turbulance = RiskAwareStockTradingEnv1(df=trade_turbulance, **env_kwargs_agent3)
+
+    env_trade_turbulance, _ = e_trade_turbulance.get_sb_env()
+    
+    df_account_value_agent3, df_actions_agent3 = DRLAgent.DRL_prediction(
+        model=trained_model,
+        environment=e_trade_turbulance
+    )
+
+    return df_account_value_agent3, df_actions_agent3
 
 def predict_agent_1(trade, trained_model):
     # Setup the environment
@@ -242,13 +290,17 @@ def ensure_utc_index(df):
 
 def merge_results(
     df_account_value_a2c_agent1, 
-    df_account_value_a2c_agent2, 
+    df_account_value_a2c_agent2,
+    df_account_value_a2c_agent3,
     df_account_value_sac_agent1,
     df_account_value_sac_agent2,
+    df_account_value_sac_agent3,
     df_account_value_ppo_agent1,
     df_account_value_ppo_agent2,
+    df_account_value_ppo_agent3,
     df_account_value_td3_agent1,
     df_account_value_td3_agent2,
+    df_account_value_td3_agent3,
     MVO_result, 
     dji
     ):
@@ -259,11 +311,17 @@ def merge_results(
     df_result_a2c_agent2 = ensure_utc_index(df_account_value_a2c_agent2.set_index(df_account_value_a2c_agent2.columns[0]))
     df_result_a2c_agent2.columns = ['a2c_agent2']
 
+    df_result_a2c_agent3 = ensure_utc_index(df_account_value_a2c_agent3.set_index(df_account_value_a2c_agent3.columns[0]))
+    df_result_a2c_agent3.columns = ['a2c_agent3']
+
     df_result_sac_agent1 = ensure_utc_index(df_account_value_sac_agent1.set_index(df_account_value_sac_agent1.columns[0]))
     df_result_sac_agent1.columns = ['sac_agent1']
 
     df_result_sac_agent2 = ensure_utc_index(df_account_value_sac_agent2.set_index(df_account_value_sac_agent2.columns[0]))
     df_result_sac_agent2.columns = ['sac_agent2']
+
+    df_result_sac_agent3 = ensure_utc_index(df_account_value_sac_agent3.set_index(df_account_value_sac_agent3.columns[0]))
+    df_result_sac_agent3.columns = ['sac_agent3']
 
     df_result_ppo_agent1 = ensure_utc_index(df_account_value_ppo_agent1.set_index(df_account_value_ppo_agent1.columns[0]))
     df_result_ppo_agent1.columns = ['ppo_agent1']
@@ -271,11 +329,17 @@ def merge_results(
     df_result_ppo_agent2 = ensure_utc_index(df_account_value_ppo_agent2.set_index(df_account_value_ppo_agent2.columns[0]))
     df_result_ppo_agent2.columns = ['ppo_agent2']
 
+    df_result_ppo_agent3 = ensure_utc_index(df_account_value_ppo_agent3.set_index(df_account_value_ppo_agent3.columns[0]))
+    df_result_ppo_agent3.columns = ['ppo_agent3']
+
     df_result_td3_agent1 = ensure_utc_index(df_account_value_td3_agent1.set_index(df_account_value_td3_agent1.columns[0]))
     df_result_td3_agent1.columns = ['td3_agent1']
 
     df_result_td3_agent2 = ensure_utc_index(df_account_value_td3_agent2.set_index(df_account_value_td3_agent2.columns[0]))
     df_result_td3_agent2.columns = ['td3_agent2']
+
+    df_result_td3_agent3 = ensure_utc_index(df_account_value_td3_agent3.set_index(df_account_value_td3_agent3.columns[0]))
+    df_result_td3_agent3.columns = ['td3_agent3']
 
 
     MVO_result.columns = ['mvo']
@@ -284,18 +348,31 @@ def merge_results(
     # Join
     result = df_result_a2c_agent1.copy()
     result = result.join(df_result_a2c_agent2, how='outer')
+    result = result.join(df_result_a2c_agent3, how='outer')
     result = result.join(df_result_sac_agent1, how='outer')
     result = result.join(df_result_sac_agent2, how='outer')
+    result = result.join(df_result_sac_agent3, how='outer')
     result = result.join(df_result_ppo_agent1, how='outer')
     result = result.join(df_result_ppo_agent2, how='outer')
+    result = result.join(df_result_ppo_agent3, how='outer')
     result = result.join(df_result_td3_agent1, how='outer')
     result = result.join(df_result_td3_agent2, how='outer')
+    result = result.join(df_result_td3_agent3, how='outer')
     result = result.join(MVO_result, how='outer')
     result = result.join(dji, how='outer')
 
     result = result.fillna(method='bfill')
-    col_name = ['A2C Agent 1', 'A2C Agent 2', 'SAC Agent 1', 'SAC Agent 2','PPO Agent 1','PPO Agent 2', 'TD3 Agent 1', 'TD3 Agent 2', 'Mean Var', 'djia']
+
+    # col_name = ['A2C Agent 1', 'A2C Agent 2', 'SAC Agent 1', 'SAC Agent 2', 'Mean Var', 'djia']
+    col_name = ['A2C Agent 1', 'A2C Agent 2', 'A2C Agent 3',
+                'SAC Agent 1', 'SAC Agent 2', 'SAC Agent 3',
+                'PPO Agent 1', 'PPO Agent 2', 'PPO Agent 3',
+                'TD3 Agent 1', 'TD3 Agent 2', 'TD3 Agent 3',
+                'mvo', 'djia']
+    
+
     result.columns = col_name
     result = result.dropna(subset=['djia'])
     
     return result
+

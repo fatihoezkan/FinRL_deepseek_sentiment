@@ -20,10 +20,10 @@ if __name__ == "__main__":
         - Skipped for now, using pre-trained model
         '''
         # train_a2c()
-        # train_sac()
         # train_ppo()
+        # train_sac()
         # train_td3()
-        train_all()
+        # train_all()
         print("Stage 2: Training skipped.")
         print("---------------------------------------------")
         

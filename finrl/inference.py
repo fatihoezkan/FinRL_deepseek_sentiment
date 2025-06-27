@@ -40,6 +40,10 @@ def get_inference():
         trade_sentiment = load_aggregated_risk_score(trade)
         print("Loaded aggregated risk scores and merged with trade data.")
 
+        # Load trade turbulence data
+        trade_turbulence = load_sentiment_and_turbulence(trade)
+        print("Loaded trade turbulence data.")
+
         # Predict A2C Agent 1
         df_account_value_a2c_agent1, _ = predict_agent_1(trade, trained_a2c)
         print("A2C Agent 1 prediction done.")
@@ -71,6 +75,21 @@ def get_inference():
         # Predict TD3 Agent 2
         df_account_value_td3_agent2, _ = predict_agent_2(trade, trained_td3, trade_sentiment)
 
+        #predict A2C Agent 3
+        df_account_value_a2c_agent3, _ = predict_agent_3(trade, trained_a2c, trade_turbulence)
+        print("A2C Agent 3 prediction done.")
+
+        # Predict SAC Agent 3
+        df_account_value_sac_agent3, _ = predict_agent_3(trade, trained_sac, trade_turbulence)
+        print("SAC Agent 3 prediction done.")
+
+        # Predict PPO Agent 3
+        df_account_value_ppo_agent3, _ = predict_agent_3(trade, trained_ppo, trade_turbulence)
+        print("PPO Agent 3 prediction done.")
+
+        # Predict TD3 Agent 3
+        df_account_value_td3_agent3, _ = predict_agent_3(trade, trained_td3, trade_turbulence)
+
         # Calculate Mean Variance Optimization (MVO)
         StockData, arStockPrices, rows, cols = calculate_mvo(trade)
         
@@ -90,13 +109,17 @@ def get_inference():
         # Merge results
         result = merge_results(
                     df_account_value_a2c_agent1, 
-                    df_account_value_a2c_agent2, 
+                    df_account_value_a2c_agent2,
+                    df_account_value_a2c_agent3, 
                     df_account_value_sac_agent1,
                     df_account_value_sac_agent2,
+                    df_account_value_sac_agent3,
                     df_account_value_ppo_agent1,
                     df_account_value_ppo_agent2,
+                    df_account_value_ppo_agent3,
                     df_account_value_td3_agent1,
                     df_account_value_td3_agent2,
+                    df_account_value_td3_agent3,
                     MVO_result, 
                     dji
                 )
