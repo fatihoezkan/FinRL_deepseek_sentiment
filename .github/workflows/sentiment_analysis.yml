@@ -1,9 +1,9 @@
 name: Run Sentiment Pipeline
 
-on:
-  schedule:
-    - cron: '0 10 * * 2-6'  # Every Tuesday-Saturday at 10:00 UTC
-  workflow_dispatch:      # Allows manual trigger from GitHub UI
+# on:
+#   schedule:
+#     - cron: '0 10 * * 2-6'  # Every Tuesday-Saturday at 10:00 UTC
+#   workflow_dispatch:      # Allows manual trigger from GitHub UI
 
 jobs:
   run-sentiment-pipeline:
